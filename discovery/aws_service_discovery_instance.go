@@ -71,14 +71,21 @@ func (a awsService) GetServers() (servers []configuration.ServiceServer) {
 	for _, instance := range a.instances {
 		port, _ := a.instancePortFromEC2(instance)
 		var address string
-		switch a.ipv4 {
-		case models.AwsRegionIPV4AddressPrivate:
-			address = aws.ToString(instance.PrivateIpAddress)
-		case models.AwsRegionIPV4AddressPublic:
-			address = aws.ToString(instance.PublicIpAddress)
-		default:
+		// switch a.ipv4 {
+		// case models.AwsRegionIPV4AddressPrivate:
+		// 	address = aws.ToString(instance.PrivateIpAddress)
+		// case models.AwsRegionIPV4AddressPublic:
+		// 	address = aws.ToString(instance.PublicIpAddress)
+		// default:
+		// 	continue
+		// }
+
+		// Skip if no IPv6 addresses
+		if len(instance.NetworkInterfaces) == 0 || len(instance.NetworkInterfaces[0].Ipv6Addresses) == 0 {
 			continue
 		}
+		address = aws.ToString(instance.NetworkInterfaces[0].Ipv6Addresses[0].Ipv6Address)
+
 		// In case of public IPv4 and the instance doesn't have it, ignoring.
 		if len(address) == 0 {
 			continue
